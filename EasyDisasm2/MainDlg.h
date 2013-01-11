@@ -6,6 +6,8 @@
 
 #include "ProcessListDlg.h"
 #include "MemListDlg.h"
+#include <x86dis.h>
+
 
 class CMainDlg : public CDialogImpl<CMainDlg>, public CUpdateUI<CMainDlg>,
 		public CMessageFilter, public CIdleHandler
@@ -13,7 +15,7 @@ class CMainDlg : public CDialogImpl<CMainDlg>, public CUpdateUI<CMainDlg>,
 public:
 	enum { IDD = IDD_MAINDLG };
 
-	CMainDlg():m_nPid(0){}
+	CMainDlg():m_nPid(0),m_x86Dasm(X86_OPSIZE32,X86_ADDRSIZE32){}
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
 	{
@@ -106,10 +108,10 @@ public:
 	}
 
 	bool DisasmAndShow(CMemListDlg::MEMRNGINFO& info);
-	bool DisasmAndShow2(CMemListDlg::MEMRNGINFO& info);
-	bool DisasmAndShow3(CMemListDlg::MEMRNGINFO& info);
 
 	int	m_nPid;
 	CListViewCtrl	m_ListDisasm;
+	#include <x86dis.h>
+	x86dis m_x86Dasm;
 };
 
