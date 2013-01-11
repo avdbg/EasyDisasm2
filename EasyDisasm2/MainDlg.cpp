@@ -40,14 +40,14 @@ bool CMainDlg::DisasmAndShow( CMemListDlg::MEMRNGINFO& info )
 		char	szBuffer[100];
 		sprintf(szBuffer,"%08X",addr.addr32.offset);	//µÿ÷∑
 		m_ListDisasm.InsertItem(nIndex,szBuffer);
-
+		
 		*szBuffer = '\0';
 		char* tmp = szBuffer;
 		for (int j=0; j < insn->size; j++)
 		{
 			tmp += sprintf(tmp, "%02x ", vecCode[j]);
 		}
-		m_ListDisasm.SetItemText(nIndex,1,szBuffer);
+		m_ListDisasm.SetItemText(nIndex,1,szBuffer);	//hex
 		m_ListDisasm.SetItemText(nIndex,2,pcsIns);	//ª„±‡¥˙¬Î
 		//µÿ÷∑++
 		addr.addr32.offset += insn->size;

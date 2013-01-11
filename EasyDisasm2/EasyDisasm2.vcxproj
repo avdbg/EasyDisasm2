@@ -185,6 +185,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="x86Analysis.cpp" />
+    <ClCompile Include="x86RevDis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemListDlg.h" />
@@ -192,6 +194,8 @@
     <ClInclude Include="ProcessListDlg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="x86Analysis.h" />
+    <ClInclude Include="x86RevDis.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EasyDisasm2.rc" />
