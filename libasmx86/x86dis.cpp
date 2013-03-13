@@ -381,7 +381,8 @@ void x86dis::decode_insn(x86opc_insn *xinsn)
 						if (insn.opsizeprefix == X86_PREFIX_OPSIZE) 
 						{
 							invalidate();
-						} else 
+						}
+						else 
 						{
 							insn.repprefix = X86_PREFIX_NO;
 							insn.opcodeclass = X86DIS_OPCODE_CLASS_EXT_F2;

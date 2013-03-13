@@ -320,7 +320,8 @@ void x86asm::emitfarptr(uint32 s, uint32 o, bool big)
 		immsize = 6;
 		imm = o;
 		imm2 = s;
-	} else
+	}
+	else
 	{
 		immsize = 4;
 		imm = (s<<16) | (o & 0xffff);
@@ -1315,7 +1316,9 @@ bool x86asm::encode_sib_v(x86_insn_op *op, int mindispsize, int *_ss, int *_inde
 		mod = 0;
 		dispsize = 4;
 		if (!mindispsize) *disp = 0;
-	} else {
+	}
+	else
+	{
 		if ((base & 7) == X86_REG_BP && mod == 0)
 		{
 			mod = 1;
@@ -1335,7 +1338,8 @@ bool x86asm::encode_sib_v(x86_insn_op *op, int mindispsize, int *_ss, int *_inde
 
 int x86asm::esizeop(uint c, int size)
 {
-	switch (c) {
+	switch (c)
+	{
 	case SIZE_B:
 		return 1;
 	case SIZE_W:
@@ -1813,7 +1817,8 @@ int x86asm::match_opcode_final(x86opc_insn *opcode, x86asm_insn *insn, int prefi
 		if (match == MATCHOPNAME_MATCH_IF_OPPREFIX)
 		{
 			insn->opsizeprefix = X86_PREFIX_OPSIZE;
-		} else if (match == MATCHOPNAME_MATCH_IF_NOOPPREFIX)
+		}
+		else if (match == MATCHOPNAME_MATCH_IF_NOOPPREFIX)
 		{
 			insn->opsizeprefix = X86_PREFIX_NOOPSIZE;
 		}
@@ -2311,7 +2316,8 @@ cont:
 						index = base;
 						base = t;
 						scale = 2;
-					} else return false;
+					}
+					else return false;
 					lasttokenreg = j;
 					sign = 0;
 					goto cont;
