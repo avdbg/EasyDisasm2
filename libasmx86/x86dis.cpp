@@ -42,7 +42,7 @@ x86dis::x86dis(X86OpSize aOpsize, X86AddrSize aAddrsize)
 {
 	insn.invalid = true;
 	x86_insns = &x86_32_insns;
-	highlight = false;
+// 	highlight = true;
 }
 
 void x86dis::checkInfo(x86opc_insn *xinsn)
@@ -1323,9 +1323,9 @@ static const char *regs(x86dis_insn *insn, int mode, int nr)
 
 void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *op, bool explicit_params)
 {
-	const char *cs_default = get_cs(e_cs_default);
-	const char *cs_number = get_cs(e_cs_number);
-	const char *cs_symbol = get_cs(e_cs_symbol);
+	//const char *cs_default = get_cs(e_cs_default);
+	//const char *cs_number = get_cs(e_cs_number);
+	//const char *cs_symbol = get_cs(e_cs_symbol);
 
 	*opstrlen=0;
 	switch (op->type)
@@ -1345,7 +1345,7 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 			else 
 			{
 				char *g = opstr;
-				strcpy(g, cs_number); g += strlen(cs_number);
+				//strcpy(g, cs_number); g += strlen(cs_number);
 				switch (op->size)
 				{
 				case 1:
@@ -1361,7 +1361,7 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 					hexq(&g, 16, options, op->imm);
 					break;
 				}
-				strcpy(g, cs_default); g += strlen(cs_default);
+				//strcpy(g, cs_default); g += strlen(cs_default);
 			}
 			break;
 		}
@@ -1401,9 +1401,10 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 	case X86_OPTYPE_STX:
 		if (op->stx)
 		{
-			sprintf(opstr, "st%s(%s%d%s)%s", 
-				cs_symbol, cs_number, op->stx, 
-				cs_symbol, cs_default);
+// 			sprintf(opstr, "st%s(%s%d%s)%s", 
+// 				cs_symbol, cs_number, op->stx, 
+// 				cs_symbol, cs_default);
+			sprintf(opstr,"st(%d)",op->stx);
 		}
 		else
 		{
@@ -1479,11 +1480,12 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 			}
 			if (insn->segprefix != X86_PREFIX_NO)
 			{
-				d += sprintf(d, "%s%s:%s", x86_segs[insn->segprefix], cs_symbol, cs_default);
+				//d += sprintf(d, "%s%s:%s", x86_segs[insn->segprefix], cs_symbol, cs_default);
+				d += sprintf(d, "%s:", x86_segs[insn->segprefix]);
 			}
-			strcpy(d, cs_symbol); d += strlen(cs_symbol);
+			//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 			*(d++)='[';
-			strcpy(d, cs_default); d += strlen(cs_default);
+			//strcpy(d, cs_default); d += strlen(cs_default);
 			bool first = true;
 			int reg = 0;
 			switch (insn->eaddrsize)
@@ -1502,7 +1504,8 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 			bool optimize_addr = options & X86DIS_STYLE_OPTIMIZE_ADDR;
 			if (optimize_addr && op->mem.base != X86_REG_NO && op->mem.base == op->mem.index)
 			{
-				d += sprintf(d, "%s%s*%s%d%s", regs(insn, reg, op->mem.index), cs_symbol, cs_number, op->mem.scale+1, cs_default);
+//				d += sprintf(d, "%s%s*%s%d%s", regs(insn, reg, op->mem.index), cs_symbol, cs_number, op->mem.scale+1, cs_default);
+				d += sprintf(d, "%s*%d", regs(insn, reg, op->mem.index) , op->mem.scale+1);
 				first = false;
 			}
 			else
@@ -1521,9 +1524,9 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 				{
 					if (!first)
 					{
-						strcpy(d, cs_symbol); d += strlen(cs_symbol);
+						//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 						*(d++) = '+';
-						strcpy(d, cs_default); d += strlen(cs_default);
+						//strcpy(d, cs_default); d += strlen(cs_default);
 					}
 					if (op->mem.scale == 1)
 					{
@@ -1531,7 +1534,8 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 					}
 					else
 					{
-						d += sprintf(d, "%s%s*%s%d%s", regs(insn, reg, op->mem.index), cs_symbol, cs_number, op->mem.scale, cs_default);
+						//d += sprintf(d, "%s%s*%s%d%s", regs(insn, reg, op->mem.index), cs_symbol, cs_number, op->mem.scale, cs_default);
+						d += sprintf(d, "%s*%d", regs(insn, reg, op->mem.index), op->mem.scale);
 					}
 					first = false;
 				}
@@ -1546,9 +1550,9 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 				{
 					if (!first)
 					{
-						strcpy(d, cs_symbol); d += strlen(cs_symbol);
+						//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 						*(d++)='+';
-						strcpy(d, cs_default); d += strlen(cs_default);
+						//strcpy(d, cs_default); d += strlen(cs_default);
 					}
 					memcpy(d, s, slen);
 					d+=slen;
@@ -1563,23 +1567,23 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 						q = sint32(sint16(op->mem.disp));
 						if (!first)
 						{
-							strcpy(d, cs_symbol); d += strlen(cs_symbol);
+							//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 							if (op->mem.disp & 0x8000)
 							{
 								*(d++) = '-';
 								q = 0-q;
 							} else *(d++) = '+';
 						}
-						strcpy(d, cs_number); d += strlen(cs_number);
+						//strcpy(d, cs_number); d += strlen(cs_number);
 						hexd(&d, 4, options, q);
-						strcpy(d, cs_default); d += strlen(cs_default);
+						//strcpy(d, cs_default); d += strlen(cs_default);
 						break;
 					case X86_ADDRSIZE32:
 					case X86_ADDRSIZE64:
 						q = op->mem.disp;
 						if (!first)
 						{
-							strcpy(d, cs_symbol); d += strlen(cs_symbol);
+							//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 							if (op->mem.disp & 0x80000000)
 							{
 								*(d++)='-';
@@ -1588,18 +1592,18 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 							else
 								*(d++)='+';
 						}
-						strcpy(d, cs_number); d += strlen(cs_number);
+						//strcpy(d, cs_number); d += strlen(cs_number);
 						hexd(&d, 8, options, q);
-						strcpy(d, cs_default); d += strlen(cs_default);
+						//strcpy(d, cs_default); d += strlen(cs_default);
 						break;
 					}
 				}
 			}
-			strcpy(d, cs_symbol); d += strlen(cs_symbol);
+			//strcpy(d, cs_symbol); d += strlen(cs_symbol);
 			*(d++)=']';
-			strcpy(d, cs_default); d += strlen(cs_default);
-			if (*opstrlen)
-				*opstrlen += strlen(cs_symbol) + 1 + strlen(cs_default);
+			//strcpy(d, cs_default); d += strlen(cs_default);
+			//if (*opstrlen)
+			//	*opstrlen += strlen(cs_symbol) + 1 + strlen(cs_default);
 			*d=0;
 			break;
 		}
@@ -1620,9 +1624,9 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 			{
 				char *g=opstr;
 				hexd(&g, 4, options, op->farptr.seg);
-				strcpy(g, cs_symbol); g += strlen(cs_symbol);
+				//strcpy(g, cs_symbol); g += strlen(cs_symbol);
 				*(g++)=':';
-				strcpy(g, cs_default); g += strlen(cs_default);
+				//strcpy(g, cs_default); g += strlen(cs_default);
 				switch (op->size)
 				{
 				case 4:
@@ -1643,8 +1647,8 @@ void x86dis::str_op(char *opstr, int *opstrlen, x86dis_insn *insn, x86_insn_op *
 
 void x86dis::str_format(char **str, const char **format, char *p, char *n, char *op[3], int oplen[3], char stopchar, int print)
 {
-	const char *cs_default = get_cs(e_cs_default);
-	const char *cs_symbol = get_cs(e_cs_symbol);
+	//const char *cs_default = get_cs(e_cs_default);
+	//const char *cs_symbol = get_cs(e_cs_symbol);
 
 	const char *f = *format;
 	char *s = *str;
@@ -1747,9 +1751,9 @@ void x86dis::str_format(char **str, const char **format, char *p, char *n, char 
 			if (print)
 			{
 				bool x = (strchr(",.-=+-*/[]()", *f) != NULL) && *f;
-				if (x) { strcpy(s, cs_symbol); s += strlen(cs_symbol); }
+				//if (x) { strcpy(s, cs_symbol); s += strlen(cs_symbol); }
 				*(s++) = *f;
-				if (x) { strcpy(s, cs_default); s += strlen(cs_default); }
+				//if (x) { strcpy(s, cs_default); s += strlen(cs_default); }
 			}
 		}
 		f++;
@@ -1808,7 +1812,7 @@ const char *x86dis::strf(dis_insn *disasm_insn, int opt, const char *format)
 	char *op[5];
 	int oplen[5];
 
-	if (options & DIS_STYLE_HIGHLIGHT) enable_highlighting();
+	//if (options & DIS_STYLE_HIGHLIGHT) enable_highlighting();
 	for (int i=0; i < 5; i++)
 	{
 		op[i] = (char*)&ops[i];
@@ -1858,7 +1862,7 @@ const char *x86dis::strf(dis_insn *disasm_insn, int opt, const char *format)
 		strcpy(n, iname);
 	}
 	str_format(&s, &format, prefix, n, op, oplen, 0, 1);
-	disable_highlighting();
+	//disable_highlighting();
 	return insnstr;
 }
 
@@ -2145,28 +2149,28 @@ bool x86dis::selectNext(dis_insn *disasm_insn)
 	return false;
 }
 
-const char *x86dis::get_cs(AsmSyntaxHighlightEnum style)
-{
-	const char *highlights[] =
-	{
-		ASM_SYNTAX_DEFAULT,
-		ASM_SYNTAX_COMMENT,
-		ASM_SYNTAX_NUMBER,
-		ASM_SYNTAX_SYMBOL,
-		ASM_SYNTAX_STRING
-	};
-	return highlight ? highlights[(int)style] : "";
-}
+// const char *x86dis::get_cs(AsmSyntaxHighlightEnum style)
+// {
+// 	const char *highlights[] =
+// 	{
+// 		ASM_SYNTAX_DEFAULT,
+// 		ASM_SYNTAX_COMMENT,
+// 		ASM_SYNTAX_NUMBER,
+// 		ASM_SYNTAX_SYMBOL,
+// 		ASM_SYNTAX_STRING
+// 	};
+// 	return highlight ? highlights[(int)style] : "";
+// }
 
-void x86dis::enable_highlighting()
-{
-	highlight = true;
-}
+// void x86dis::enable_highlighting()
+// {
+// 	highlight = true;
+// }
 
-void x86dis::disable_highlighting()
-{
-	highlight = false;
-}
+// void x86dis::disable_highlighting()
+// {
+// 	highlight = false;
+// }
 
 void x86dis::set_addr_sym_func( char* (*pfn)(CPU_ADDR addr, int *symstrlen, void *context),void* pContext )
 {

@@ -25,7 +25,7 @@
 #include "x86opc.h"
 
 /* generic disassembler styles */
-#define DIS_STYLE_HIGHLIGHT		0x80000000		/* create highlighting information in strf() */
+//#define DIS_STYLE_HIGHLIGHT		0x80000000		/* create highlighting information in strf() */
 #define DIS_STYLE_HEX_CSTYLE		0x40000000		/* IF SET: mov eax, 0x12345678 		ELSE: mov eax, 12345678 */
 #define DIS_STYLE_HEX_ASMSTYLE		0x20000000		/* IF SET: mov eax, 12345678h 		ELSE: mov eax, 12345678 */
 #define DIS_STYLE_HEX_UPPERCASE		0x10000000		/* IF SET: mov eax, 5678ABCD	 	ELSE: mov eax, 5678abcd */
@@ -192,15 +192,15 @@ protected:
 
 	//Disassembler
 	int options;
-	bool highlight;
+	//bool highlight;
 	char* (*addr_sym_func)(CPU_ADDR addr, int *symstrlen, void *context);
 	void* addr_sym_func_context;
 
-	const char *get_cs(AsmSyntaxHighlightEnum style);
+	//const char *get_cs(AsmSyntaxHighlightEnum style);
 	void hexd(char **s, int size, int options, uint32 imm);
 	void hexq(char **s, int size, int options, uint64 imm);
-	void enable_highlighting();
-	void disable_highlighting();
+	//void enable_highlighting();
+	//void disable_highlighting();
 
 public:
 	x86dis(X86OpSize opsize, X86AddrSize addrsize);
