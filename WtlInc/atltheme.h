@@ -240,7 +240,7 @@ public:
 		return ::GetThemeTextMetrics(m_hTheme, hDC, nPartID, nStateID, pTextMetric);
 #else // !_WTL_NEW_UXTHEME
 		// Note: The cast to PTEXTMETRIC is because uxtheme.h incorrectly uses it instead of PTEXTMETRICW
-		return ::GetThemeTextMetrics(m_hTheme, hDC, nPartID, nStateID, pTextMetric);
+		return ::GetThemeTextMetrics(m_hTheme, hDC, nPartID, nStateID, (PTEXTMETRIC)pTextMetric);
 #endif // !_WTL_NEW_UXTHEME
 	}
 
@@ -330,7 +330,7 @@ public:
 		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, pFont);
 #else // !_WTL_NEW_UXTHEME
 		// Note: The cast to LOGFONT* is because uxtheme.h incorrectly uses it instead of LOGFONTW*
-		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, pFont);
+		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, (LOGFONT*)pFont);
 #endif // !_WTL_NEW_UXTHEME
 	}
 
@@ -341,7 +341,7 @@ public:
 		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, pFont);
 #else // !_WTL_NEW_UXTHEME
 		// Note: The cast to LOGFONT* is because uxtheme.h incorrectly uses it instead of LOGFONTW*
-		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, pFont);
+		return ::GetThemeFont(m_hTheme, hDC, nPartID, nStateID, nPropID, (LOGFONT*)pFont);
 #endif // !_WTL_NEW_UXTHEME
 	}
 
@@ -406,7 +406,7 @@ public:
 		return ::GetThemeSysFont(m_hTheme, nFontID, plf);
 #else // !_WTL_NEW_UXTHEME
 		// Note: The cast to LOGFONT* is because uxtheme.h incorrectly uses it instead of LOGFONTW*
-		return ::GetThemeSysFont(m_hTheme, nFontID, plf);
+		return ::GetThemeSysFont(m_hTheme, nFontID, (LOGFONT*)plf);
 #endif // !_WTL_NEW_UXTHEME
 	}
 

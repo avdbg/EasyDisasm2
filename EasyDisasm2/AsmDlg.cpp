@@ -11,12 +11,9 @@ public:
 
 	~defer()
 	{
-		if (m_DeferFun != NULL)
-		{
-			m_DeferFun();
-		}
+		m_DeferFun();
 	}
-	void Reset(){m_DeferFun = NULL;}
+	void Reset(){m_DeferFun = []{};}
 protected:
 private:
 	defer(defer&){}
