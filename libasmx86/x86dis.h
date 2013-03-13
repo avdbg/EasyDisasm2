@@ -77,7 +77,7 @@ n 		name
 #define DISASM_STRF_DEFAULT_FORMAT	"?p#%p #%n\t%1?2#, %2#?3#, %3#?4#, %4#?5#, %5#"
 #define DISASM_STRF_SMALL_FORMAT	"?p#%p #%n?1# %1#?2#,%2#?3#,%3#?4#,%4#?5#,%5#"
 
-#define MAGIC32(magic) (unsigned long)(((unsigned char)magic[0]<<24) | ((unsigned char)magic[1]<<16) | ((unsigned char)magic[2]<<8) | (unsigned char)magic[3])
+//#define MAGIC32(magic) (unsigned long)(((unsigned char)magic[0]<<24) | ((unsigned char)magic[1]<<16) | ((unsigned char)magic[2]<<8) | (unsigned char)magic[3])
 
 #define ASM_SYNTAX_DEFAULT "\\@d"
 #define ASM_SYNTAX_COMMENT "\\@#"
