@@ -199,6 +199,7 @@ static const int addr2size[4] = {-1, 2, 4, 8};
 */
 
 x86asm::x86asm(X86OpSize o, X86AddrSize a)
+	:imm_eval_proc(NULL)
 {
 	codes = 0;
 	bigendian = false;

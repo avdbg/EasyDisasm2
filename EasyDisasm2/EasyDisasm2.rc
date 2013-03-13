@@ -13,11 +13,77 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文(简体) resources
+// 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOGPROCESSLIST DIALOGEX 0, 0, 326, 271
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,205,250,50,14
+    PUSHBUTTON      "取消",IDCANCEL,269,250,50,14
+    CONTROL         "",IDC_LISTPROCESS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,312,242
+END
+
+IDD_DIALOGASM DIALOGEX 0, 0, 187, 68
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,69,47,50,14
+    PUSHBUTTON      "取消",IDCANCEL,130,47,50,14
+    LTEXT           "Address:",IDC_STATIC,7,8,30,8
+    LTEXT           "Instruction:",IDC_STATIC,7,29,38,8
+    EDITTEXT        IDC_EDITADDRESS,65,7,40,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDITINSN,65,26,115,12,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_DIALOGPROCESSLIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 319
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 264
+    END
+
+    IDD_DIALOGASM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
+#pragma code_page(950)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -38,10 +104,10 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "EasyDisasm2"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "进程列表",IDOK,7,233,50,14
-    PUSHBUTTON      "取消",IDCANCEL,284,233,50,14
-    PUSHBUTTON      "内存映射",ID_APP_ABOUT,139,233,50,14
-    CONTROL         "",IDC_LISTDISASM,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,327,224
+    DEFPUSHBUTTON   "?祘",IDOK,7,233,50,14
+    PUSHBUTTON      "",IDCANCEL,284,233,50,14
+    PUSHBUTTON      "?琈甮",ID_APP_ABOUT,139,233,50,14
+    CONTROL         "",IDC_LISTDISASM,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,327,224
 END
 
 
@@ -72,51 +138,6 @@ END
 #endif    // APSTUDIO_INVOKED
 
 #endif    // 中文(简体) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// 中文(简体，中国) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-#pragma code_page(936)
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_DIALOGPROCESSLIST DIALOGEX 0, 0, 326, 271
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    DEFPUSHBUTTON   "确定",IDOK,205,250,50,14
-    PUSHBUTTON      "取消",IDCANCEL,269,250,50,14
-    CONTROL         "",IDC_LISTPROCESS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,312,242
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_DIALOGPROCESSLIST, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 319
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 264
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

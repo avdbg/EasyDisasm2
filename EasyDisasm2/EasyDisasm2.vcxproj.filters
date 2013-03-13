@@ -30,10 +30,7 @@
     <ClCompile Include="MainDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="x86RevDis.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="x86Analysis.cpp">
+    <ClCompile Include="AsmDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,10 +50,7 @@
     <ClInclude Include="MemListDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="x86RevDis.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="x86Analysis.h">
+    <ClInclude Include="AsmDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -36,12 +36,8 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnMemList)
 		COMMAND_ID_HANDLER(IDOK, OnListProcess)
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+		NOTIFY_HANDLER(IDC_LISTDISASM, NM_RCLICK, OnNMRclickListdisasm)
 	END_MSG_MAP()
-
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
@@ -113,5 +109,11 @@ public:
 	CListViewCtrl	m_ListDisasm;
 	#include <x86dis.h>
 	x86dis m_x86Dasm;
+//	LRESULT OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnNMRclickListdisasm(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
+
+	CMemListDlg::MEMRNGINFO	info;
+	std::vector<byte> m_vecCode;
+	uint32 m_StartAddr;
 };
 
