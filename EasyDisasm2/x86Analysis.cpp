@@ -11,7 +11,7 @@ void x86Analysis::DisBlock( uint32 uEntry )
 	{
 		x86dis_insn* insn = (x86dis_insn*)m_Decoder.decode(m_pCode+i,m_uCodeSize-i,curAddr);
 
-		const char* pcsIns = m_Decoder.str(insn,DIS_STYLE_HEX_ASMSTYLE | DIS_STYLE_HEX_UPPERCASE | DIS_STYLE_HEX_NOZEROPAD);
+		//const char* pcsIns = m_Decoder.str(insn,DIS_STYLE_HEX_ASMSTYLE | DIS_STYLE_HEX_UPPERCASE | DIS_STYLE_HEX_NOZEROPAD);
 		//printf("%08X\t%s\n",curAddr.addr32.offset, pcsIns);
 		i += insn->size;
 		curAddr.addr32.offset += insn->size;
@@ -109,4 +109,45 @@ CPU_ADDR x86Analysis::branchAddr(x86dis_insn *opcode)
 	default: break;
 	}
 	return addr;
+}
+
+bool x86Analysis::Process( void )
+{
+	for (auto it = m_lstEntry.begin();
+		it != m_lstEntry.end();++it)
+	{
+		DisBlock(*it);
+	}
+}
+
+void x86Analysis::AddBlock( const CODEBLOCK& block )
+{
+	std::vector<CODEBLOCK>::iterator itBefore = m_vecBlocks.begin();
+
+	for (auto it = m_vecBlocks.begin();
+		it != m_vecBlocks.end();++it)
+	{
+		if (it->Start == block.Start)
+		{
+			return;
+		}
+
+		if (block.Start > it->Start)
+		{
+			if (block.Start < it->End)
+			{
+				assert(it->End == block.End);
+				CODEBLOCK tmp;
+				tmp.Start = it->Start;
+				tmp.End = block.Start;
+				m_vecBlocks.erase(it);
+				AddBlock(tmp);
+				AddBlock(block);
+				return;
+			}
+			itBefore = it+1;
+		}
+	}
+
+	m_vecBlocks.insert(itBefore,block);
 }

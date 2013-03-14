@@ -14,14 +14,13 @@ private:
 	uint32 m_uCodeSize;
 	uint32 m_pStartVA;
 
-	typedef struct tagDISBLOCK
+	typedef struct tagCODEBLOCK
 	{
 		uint32 Start;
 		uint32 End;
-		std::vector<std::string> Disasm;
-	}DISBLOCK;
+	}CODEBLOCK;
 
-	std::vector<DISBLOCK> m_vecBlocks;
+	std::vector<CODEBLOCK> m_vecBlocks;
 	void DisBlock(uint32 uEntry);
 	byte* VA2CodeOffset(uint32 va){return m_pCode + (va - m_pStartVA);}
 	uint32 CodeOffset2VA(byte* offset){return m_pStartVA + (offset - m_pCode);}
@@ -38,6 +37,7 @@ private:
 	};
 	x86Analysis::BRANCHTYPE IsBranch(x86dis_insn* opcode);
 	CPU_ADDR branchAddr(x86dis_insn *opcode);
+	void AddBlock(const CODEBLOCK& block);
 
 public:
 	x86Analysis(byte* pCode, unsigned uSize, uint32 uStartAddr)
@@ -46,5 +46,6 @@ public:
 
 	void AddEntry(uint32 uEntry){m_lstEntry.push_back(uEntry);}
 	bool IsAddrDis(uint32 uAddr){}
+	bool Process(void);
 };
 

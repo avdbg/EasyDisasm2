@@ -39,3 +39,5 @@ Debug
 Release
 ipch
 /x64
+/EasyDisasm2/x86RevDis.cpp
+/EasyDisasm2/x86RevDis.h
