@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "AsmDlg.h"
+#include "x86Analysis.h"
 
 LRESULT CMainDlg::OnMemList( WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/ )
 {
@@ -28,6 +29,9 @@ bool CMainDlg::DisasmAndShow( CMemListDlg::MEMRNGINFO& info )
 	{
 		return false;
 	}
+
+	x86Analysis analysis(m_vecCode.data(),info.dwSize,m_StartAddr);
+	analysis.Process();
 
 	m_ListDisasm.DeleteAllItems();
 

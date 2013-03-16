@@ -1,13 +1,30 @@
 #include "stdafx.h"
 #include "x86Analysis.h"
+#include "util.h"
+#include <algorithm>
 
 
-void x86Analysis::DisBlock( uint32 uEntry )
+void x86Analysis::GetBlock( uint32 uEntry )
 {
+	assert(IsAddrValid(uEntry));
+	if (!IsAddrValid(uEntry))
+	{
+		return;
+	}
+
 	CPU_ADDR	curAddr;
 	curAddr.addr32.offset = uEntry;
+	uint32 uEnd = 0;
 
-	for (unsigned i=uEntry-m_pStartVA;i<m_uCodeSize;)
+	ScopeExit extAddBlock([uEntry,&uEnd,this]()
+	{
+		assert(uEntry != 0);
+		assert(uEnd != 0);
+		CODEBLOCK block = {uEntry,uEnd};
+		AddBlock(block);
+	});
+
+	for (unsigned i=uEntry-m_uStartVA;i<m_uCodeSize;)
 	{
 		x86dis_insn* insn = (x86dis_insn*)m_Decoder.decode(m_pCode+i,m_uCodeSize-i,curAddr);
 
@@ -19,24 +36,27 @@ void x86Analysis::DisBlock( uint32 uEntry )
 		switch (IsBranch(insn))
 		{
 		case BR_RET:
+			uEnd = CodeOffset2VA(m_pCode + i);
 			return;
 		case BR_JMP:
 			{
 				CPU_ADDR addr = branchAddr(insn);
-				if (addr.addr32.offset>=m_pStartVA && addr.addr32.offset<=(m_pStartVA+m_uCodeSize))
-				{
-					m_lstEntry.push_back(addr.addr32.offset);
-				}
+				AddEntry(addr.addr32.offset);
+				uEnd = CodeOffset2VA(m_pCode + i);
 				return;
 			}
 		case BR_JCC:
+			{
+				CPU_ADDR addr = branchAddr(insn);
+				AddEntry(addr.addr32.offset);
+				uEnd = CodeOffset2VA(m_pCode + i);
+				AddEntry(uEnd);
+				return;
+			}
 		case BR_CALL:
 			{
 				CPU_ADDR addr = branchAddr(insn);
-				if (addr.addr32.offset>=m_pStartVA && addr.addr32.offset<=(m_pStartVA+m_uCodeSize))
-				{
-					m_lstEntry.push_back(addr.addr32.offset);
-				}
+				AddEntry(addr.addr32.offset);
 			}
 			break;
 		}
@@ -113,11 +133,79 @@ CPU_ADDR x86Analysis::branchAddr(x86dis_insn *opcode)
 
 bool x86Analysis::Process( void )
 {
+
+	for (byte* i = m_pCode; i < m_pCode+m_uCodeSize;)
+	{
+		uint32 length = m_pCode+m_uCodeSize-i;
+		// 检查push ebp;mov ebp,sp
+		if (
+			length > 3 &&		// 剩的代码不超过3字节的话就不检查了
+			*i == 0x55 &&			// 0x55为push ebp的机器码 
+			( (*(i+1) == 0x8B && *(i+2) == 0xEC) || (*(i+1) == 0x89 && *(i+2) == 0xE5) ) // 两种mov ebp,esp的编码方式
+			)
+		{
+			AddEntry(CodeOffset2VA(i));
+			i += 3;
+			continue;
+		}
+
+
+		// 检查push ebp;mov eax,[esp+xx]
+		if (
+			length > 4 &&
+			*i == 0x55 &&
+			(*(i+1) == 0x8B && *(i+2) == 0x44 && *(i+3) == 0x24 )
+			)
+		{
+			AddEntry(CodeOffset2VA(i));
+			i += 4;
+			continue;
+		}
+
+		// 直接就是mov eax,[esp+xx]
+		if (
+			length > 3 &&
+			(*i == 0x8B && *(i+1) == 0x44 && *(i+2) == 0x24 )
+			)
+		{
+			AddEntry(CodeOffset2VA(i));
+			i += 3;
+			continue;
+		}
+
+		// enter xx,0指令
+		if (length > 4 && *i == 0xC8 && *(i+3) == 0x00 )
+		{
+			AddEntry(CodeOffset2VA(i));
+			i += 4;
+			continue;
+		}
+
+		// mov exb,esp
+		if (length > 2 && *i == 0x8B && *(i+1) == 0xDC)
+		{
+			AddEntry(CodeOffset2VA(i));
+			i += 2;
+			continue;
+		}
+		++i;
+	}
+
 	for (auto it = m_lstEntry.begin();
 		it != m_lstEntry.end();++it)
 	{
-		DisBlock(*it);
+		GetBlock(*it);
 	}
+
+	std::sort(m_vecBlocks.begin(),m_vecBlocks.end(),
+		[](CODEBLOCK& a,CODEBLOCK& b)->bool
+	{
+		assert(a.Start != b.Start);
+		assert(a.End != b.End);
+		return a.Start < b.Start;
+	});
+
+	return true;
 }
 
 void x86Analysis::AddBlock( const CODEBLOCK& block )
@@ -127,27 +215,116 @@ void x86Analysis::AddBlock( const CODEBLOCK& block )
 	for (auto it = m_vecBlocks.begin();
 		it != m_vecBlocks.end();++it)
 	{
-		if (it->Start == block.Start)
+		CODEBLOCK old = *it;
+		if (old.Start == block.Start)
 		{
+			if (old.End == block.End)
+			{
+				return;
+			}
+
+			if (old.End > block.End)
+			{
+				CODEBLOCK tmp1,tmp2;
+				m_vecBlocks.erase(it);
+				tmp1 = block;
+				tmp2.Start = block.End;
+				tmp2.End = old.End;
+				AddBlock(tmp1);
+				AddBlock(tmp2);
+				return;
+			}
+
+			CODEBLOCK tmp1,tmp2;
+			m_vecBlocks.erase(it);
+			tmp1 = old;
+			tmp2.Start = old.End;
+			tmp2.End = block.End;
+			AddBlock(tmp1);
+			AddBlock(tmp2);
 			return;
 		}
 
-		if (block.Start > it->Start)
+		if (block.Start > old.Start && block.Start < old.End)
 		{
-			if (block.Start < it->End)
+			if (block.End == old.End)
 			{
-				assert(it->End == block.End);
-				CODEBLOCK tmp;
-				tmp.Start = it->Start;
-				tmp.End = block.Start;
-				m_vecBlocks.erase(it);
-				AddBlock(tmp);
-				AddBlock(block);
+				CODEBLOCK tmp1,tmp2;
+				tmp1.Start = old.Start;
+				tmp1.End = block.Start;
+				tmp2 = block;
+				AddBlock(tmp1);
+				AddBlock(tmp2);
 				return;
 			}
-			itBefore = it+1;
+
+			if (block.End < old.End)
+			{
+				CODEBLOCK tmp1,tmp2,tmp3;
+				tmp1.Start = old.Start;
+				tmp1.End = block.Start;
+				tmp2 = block;
+				tmp3.Start = block.End;
+				tmp3.End = old.End;
+				AddBlock(tmp1);
+				AddBlock(tmp2);
+				AddBlock(tmp3);
+				return;
+			}
+
+			CODEBLOCK tmp1,tmp2,tmp3;
+			tmp1.Start = old.Start;
+			tmp1.End = block.Start;
+			tmp2.Start = block.Start;
+			tmp2.End = old.End;
+			tmp3.Start = old.End;
+			tmp3.End = block.End;
+			AddBlock(tmp1);
+			AddBlock(tmp2);
+			AddBlock(tmp3);
+			return;
+		}
+
+		if (old.Start > block.Start && old.Start < block.End)
+		{
+			if (old.End == block.End)
+			{
+				CODEBLOCK tmp1,tmp2;
+				tmp1.Start = block.Start;
+				tmp1.End = old.Start;
+				tmp2 = old;
+				AddBlock(tmp1);
+				AddBlock(tmp2);
+				return;
+			}
+
+			if (old.End < block.End)
+			{
+				CODEBLOCK tmp1,tmp2,tmp3;
+				tmp1.Start = block.Start;
+				tmp1.End = old.Start;
+				tmp2 = old;
+				tmp3.Start = old.End;
+				tmp3.End = block.End;
+				AddBlock(tmp1);
+				AddBlock(tmp2);
+				AddBlock(tmp3);
+				return;
+			}
+
+			CODEBLOCK tmp1,tmp2,tmp3;
+			tmp1.Start = block.Start;
+			tmp1.End = old.Start;
+			tmp2.Start = old.Start;
+			tmp2.End = block.End;
+			tmp3.Start = block.End;
+			tmp3.End = old.End;
+			AddBlock(tmp1);
+			AddBlock(tmp2);
+			AddBlock(tmp3);
+			return; 
 		}
 	}
 
-	m_vecBlocks.insert(itBefore,block);
+	m_vecBlocks.push_back(block);
 }

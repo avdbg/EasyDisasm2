@@ -59,6 +59,9 @@
     <ClInclude Include="x86Analysis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EasyDisasm2.rc">

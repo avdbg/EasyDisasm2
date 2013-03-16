@@ -12,7 +12,7 @@ private:
 
 	byte* m_pCode;
 	uint32 m_uCodeSize;
-	uint32 m_pStartVA;
+	uint32 m_uStartVA;
 
 	typedef struct tagCODEBLOCK
 	{
@@ -21,9 +21,17 @@ private:
 	}CODEBLOCK;
 
 	std::vector<CODEBLOCK> m_vecBlocks;
-	void DisBlock(uint32 uEntry);
-	byte* VA2CodeOffset(uint32 va){return m_pCode + (va - m_pStartVA);}
-	uint32 CodeOffset2VA(byte* offset){return m_pStartVA + (offset - m_pCode);}
+	void GetBlock(uint32 uEntry);
+	byte* VA2CodeOffset(uint32 va)
+	{
+		assert(va >= m_uStartVA && va <= (m_uStartVA + m_uCodeSize));
+		return m_pCode + (va - m_uStartVA);
+	}
+	uint32 CodeOffset2VA(byte* offset)
+	{
+		assert(offset >= m_pCode && offset <= (m_pCode + m_uCodeSize));
+		return m_uStartVA + (offset - m_pCode);
+	}
 
 	void FindCodeBlock();
 
@@ -41,10 +49,34 @@ private:
 
 public:
 	x86Analysis(byte* pCode, unsigned uSize, uint32 uStartAddr)
-		:m_Decoder(X86_OPSIZE32,X86_ADDRSIZE32){}
+		:m_Decoder(X86_OPSIZE32,X86_ADDRSIZE32),
+		m_pCode(pCode),m_uCodeSize(uSize)
+		,m_uStartVA(uStartAddr){}
+
 	~x86Analysis(void){}
 
-	void AddEntry(uint32 uEntry){m_lstEntry.push_back(uEntry);}
+	bool IsAddrValid(uint32 addr)
+	{return (addr >= m_uStartVA && addr <= (m_uStartVA+m_uCodeSize));}
+
+	bool AddEntry(uint32 uEntry)
+	{
+		if (!IsAddrValid(uEntry))
+		{
+			return false;
+		}
+
+		for (auto it = m_lstEntry.begin();
+			it != m_lstEntry.end();++it)
+		{
+			if (*it == uEntry)
+			{
+				return true;
+			}
+		}
+
+		m_lstEntry.push_back(uEntry);
+		return true;
+	}
 	bool IsAddrDis(uint32 uAddr){}
 	bool Process(void);
 };
