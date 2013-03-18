@@ -4,6 +4,7 @@
 #include <vector>
 #include "AsmDlg.h"
 #include "x86Analysis.h"
+#include <thread>
 
 LRESULT CMainDlg::OnMemList( WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/ )
 {
@@ -30,51 +31,36 @@ bool CMainDlg::DisasmAndShow( CMemListDlg::MEMRNGINFO& info )
 		return false;
 	}
 
-	x86Analysis analysis(m_vecCode.data(),info.dwSize,m_StartAddr);
-	analysis.Process();
-
-	m_ListDisasm.DeleteAllItems();
-
-	CPU_ADDR	addr = {0};
-	addr.addr32.seg = 0;
-	addr.addr32.offset = (uint32)info.pStartAddr;
-	int nIndex = 0;
-	for (int i=0;i<m_vecCode.size();++nIndex)
+	std::thread thd([this,&info]()
 	{
-		x86dis_insn* insn = (x86dis_insn*)m_x86Dasm.decode(m_vecCode.data()+i,m_vecCode.size()-i,addr);
-		const char* pcsIns = m_x86Dasm.str(insn,DIS_STYLE_HEX_ASMSTYLE | DIS_STYLE_HEX_UPPERCASE | DIS_STYLE_HEX_NOZEROPAD | DIS_STYLE_SIGNED);
-		//在ListView中显示
-		char	szBuffer[100];
-		sprintf(szBuffer,"%08X",addr.addr32.offset);	//地址
-		m_ListDisasm.InsertItem(nIndex,szBuffer);
-		
-		*szBuffer = '\0';
-		char* tmp = szBuffer;
-		for (int j=0; j < insn->size; j++)
+		x86Analysis analysis(m_vecCode.data(),info.dwSize,m_StartAddr);
+		std::vector<std::string> asmcode;
+		analysis.Process(asmcode);
+
+		m_ListDisasm.ResetContent();
+
+		for each (std::string s in asmcode)
 		{
-			tmp += sprintf(tmp, "%02x ", m_vecCode[j]);
+			m_ListDisasm.AddString(s.c_str());
 		}
-		m_ListDisasm.SetItemText(nIndex,1,szBuffer);	//hex
-		m_ListDisasm.SetItemText(nIndex,2,pcsIns);	//汇编代码
-		//地址++
-		addr.addr32.offset += insn->size;
-		i += insn->size;
-	}
+		return;
+	});
+
+	thd.detach();
+
 	return true;
 }
 
-
-
-LRESULT CMainDlg::OnNMRclickListdisasm(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/)
+LRESULT CMainDlg::OnLbnDblclkListdisasm(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	int nIndex = m_ListDisasm.GetSelectedIndex();
+	int nIndex = m_ListDisasm.GetCurSel();
 	if (nIndex == -1)
 	{
 		return 0;
 	}
 
-	char szBuffer[10];
-	if (m_ListDisasm.GetItemText(nIndex,0,szBuffer,10)<=0)
+	char szBuffer[100];
+	if (m_ListDisasm.GetText(nIndex,szBuffer)<=0)
 	{
 		return 0;
 	}

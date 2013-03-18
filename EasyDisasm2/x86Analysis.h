@@ -22,6 +22,7 @@ private:
 
 	std::vector<CODEBLOCK> m_vecBlocks;
 	void GetBlock(uint32 uEntry);
+	uint32 GetBlockSize(uint32 uEntry);
 	byte* VA2CodeOffset(uint32 va)
 	{
 		assert(va >= m_uStartVA && va <= (m_uStartVA + m_uCodeSize));
@@ -46,6 +47,7 @@ private:
 	x86Analysis::BRANCHTYPE IsBranch(x86dis_insn* opcode);
 	CPU_ADDR branchAddr(x86dis_insn *opcode);
 	void AddBlock(const CODEBLOCK& block);
+	void DisBlock(const CODEBLOCK& block,std::vector<std::string>& asmcode);
 
 public:
 	x86Analysis(byte* pCode, unsigned uSize, uint32 uStartAddr)
@@ -56,7 +58,7 @@ public:
 	~x86Analysis(void){}
 
 	bool IsAddrValid(uint32 addr)
-	{return (addr >= m_uStartVA && addr <= (m_uStartVA+m_uCodeSize));}
+	{return (addr >= m_uStartVA && addr < (m_uStartVA+m_uCodeSize));}
 
 	bool AddEntry(uint32 uEntry)
 	{
@@ -78,6 +80,6 @@ public:
 		return true;
 	}
 	bool IsAddrDis(uint32 uAddr){}
-	bool Process(void);
+	bool Process(std::vector<std::string>& asmcode);
 };
 

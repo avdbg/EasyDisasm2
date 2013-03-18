@@ -13,6 +13,69 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// 中文(简体) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
+#pragma code_page(936)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MEMLIST DIALOGEX 0, 0, 410, 299
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Memory Map"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,278,50,14
+    CONTROL         "",IDC_LISTMEMORY,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,396,268
+END
+
+IDD_MAINDLG DIALOGEX 0, 0, 341, 254
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "EasyDisasm2"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "?程列表",IDOK,7,233,50,14
+    PUSHBUTTON      "取消",IDCANCEL,284,233,50,14
+    PUSHBUTTON      "?存映射",ID_APP_ABOUT,139,233,50,14
+    LISTBOX         IDC_LISTDISASM,7,7,327,221,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_MEMLIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 403
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 292
+    END
+
+    IDD_MAINDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 334
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 247
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 中文(简体) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
@@ -75,69 +138,6 @@ END
 #endif    // APSTUDIO_INVOKED
 
 #endif    // 中文(简体，中国) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// 中文(简体) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
-LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
-#pragma code_page(950)
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_MEMLIST DIALOGEX 0, 0, 410, 299
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Memory Map"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,7,278,50,14
-    CONTROL         "",IDC_LISTMEMORY,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,396,268
-END
-
-IDD_MAINDLG DIALOGEX 0, 0, 341, 254
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "EasyDisasm2"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "?祘",IDOK,7,233,50,14
-    PUSHBUTTON      "",IDCANCEL,284,233,50,14
-    PUSHBUTTON      "?琈甮",ID_APP_ABOUT,139,233,50,14
-    CONTROL         "",IDC_LISTDISASM,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,327,224
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_MEMLIST, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 403
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 292
-    END
-
-    IDD_MAINDLG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 334
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 247
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-#endif    // 中文(简体) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

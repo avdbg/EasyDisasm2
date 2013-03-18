@@ -6,7 +6,6 @@
 
 void x86Analysis::GetBlock( uint32 uEntry )
 {
-	assert(IsAddrValid(uEntry));
 	if (!IsAddrValid(uEntry))
 	{
 		return;
@@ -33,23 +32,22 @@ void x86Analysis::GetBlock( uint32 uEntry )
 		i += insn->size;
 		curAddr.addr32.offset += insn->size;
 
+		uEnd = CodeOffset2VA(m_pCode + i);
+
 		switch (IsBranch(insn))
 		{
 		case BR_RET:
-			uEnd = CodeOffset2VA(m_pCode + i);
 			return;
 		case BR_JMP:
 			{
 				CPU_ADDR addr = branchAddr(insn);
 				AddEntry(addr.addr32.offset);
-				uEnd = CodeOffset2VA(m_pCode + i);
 				return;
 			}
 		case BR_JCC:
 			{
 				CPU_ADDR addr = branchAddr(insn);
 				AddEntry(addr.addr32.offset);
-				uEnd = CodeOffset2VA(m_pCode + i);
 				AddEntry(uEnd);
 				return;
 			}
@@ -63,6 +61,35 @@ void x86Analysis::GetBlock( uint32 uEntry )
 	}
 
 }
+
+
+uint32 x86Analysis::GetBlockSize( uint32 uEntry )
+{
+	if (!IsAddrValid(uEntry))
+	{
+		assert(false);
+		return 0;
+	}
+
+	CPU_ADDR	curAddr;
+	curAddr.addr32.offset = uEntry;
+
+	for (unsigned i=uEntry-m_uStartVA;i<m_uCodeSize;)
+	{
+		x86dis_insn* insn = (x86dis_insn*)m_Decoder.decode(m_pCode+i,m_uCodeSize-i,curAddr);
+
+		i += insn->size;
+		curAddr.addr32.offset += insn->size;
+		BRANCHTYPE type = IsBranch(insn);
+		if (type == BR_JMP || type == BR_RET)
+		{
+			break;
+		}
+	}
+
+	return curAddr.addr32.offset - uEntry;
+}
+
 
 x86Analysis::BRANCHTYPE x86Analysis::IsBranch(x86dis_insn* opcode)
 {
@@ -131,9 +158,9 @@ CPU_ADDR x86Analysis::branchAddr(x86dis_insn *opcode)
 	return addr;
 }
 
-bool x86Analysis::Process( void )
+bool x86Analysis::Process( std::vector<std::string>& asmcode )
 {
-
+	// TODO:添加更多函数开始的特征码
 	for (byte* i = m_pCode; i < m_pCode+m_uCodeSize;)
 	{
 		uint32 length = m_pCode+m_uCodeSize-i;
@@ -144,8 +171,9 @@ bool x86Analysis::Process( void )
 			( (*(i+1) == 0x8B && *(i+2) == 0xEC) || (*(i+1) == 0x89 && *(i+2) == 0xE5) ) // 两种mov ebp,esp的编码方式
 			)
 		{
-			AddEntry(CodeOffset2VA(i));
-			i += 3;
+			uint32 va = CodeOffset2VA(i);
+			AddEntry(va);
+			i += GetBlockSize(va);
 			continue;
 		}
 
@@ -157,8 +185,9 @@ bool x86Analysis::Process( void )
 			(*(i+1) == 0x8B && *(i+2) == 0x44 && *(i+3) == 0x24 )
 			)
 		{
-			AddEntry(CodeOffset2VA(i));
-			i += 4;
+			uint32 va = CodeOffset2VA(i);
+			AddEntry(va);
+			i += GetBlockSize(va);
 			continue;
 		}
 
@@ -168,33 +197,35 @@ bool x86Analysis::Process( void )
 			(*i == 0x8B && *(i+1) == 0x44 && *(i+2) == 0x24 )
 			)
 		{
-			AddEntry(CodeOffset2VA(i));
-			i += 3;
+			uint32 va = CodeOffset2VA(i);
+			AddEntry(va);
+			i += GetBlockSize(va);
 			continue;
 		}
 
 		// enter xx,0指令
 		if (length > 4 && *i == 0xC8 && *(i+3) == 0x00 )
 		{
-			AddEntry(CodeOffset2VA(i));
-			i += 4;
+			uint32 va = CodeOffset2VA(i);
+			AddEntry(va);
+			i += GetBlockSize(va);
 			continue;
 		}
 
 		// mov exb,esp
 		if (length > 2 && *i == 0x8B && *(i+1) == 0xDC)
 		{
-			AddEntry(CodeOffset2VA(i));
-			i += 2;
+			uint32 va = CodeOffset2VA(i);
+			AddEntry(va);
+			i += GetBlockSize(va);
 			continue;
 		}
 		++i;
 	}
 
-	for (auto it = m_lstEntry.begin();
-		it != m_lstEntry.end();++it)
+	for each (uint32 entry in m_lstEntry)
 	{
-		GetBlock(*it);
+		GetBlock(entry);
 	}
 
 	std::sort(m_vecBlocks.begin(),m_vecBlocks.end(),
@@ -204,6 +235,30 @@ bool x86Analysis::Process( void )
 		assert(a.End != b.End);
 		return a.Start < b.Start;
 	});
+
+	uint32 startVA = m_uStartVA;
+	char	szBuffer[100]; // FIXME：可能缓冲区溢出
+	for each (const CODEBLOCK& block in m_vecBlocks)
+	{
+		if (startVA != block.Start)
+		{
+			for (uint32 i = startVA; i < block.Start; ++i)
+			{
+				sprintf(szBuffer,"%08X  DB %02X",i,*VA2CodeOffset(i));
+				asmcode.push_back(std::string(szBuffer));
+			}
+		}
+
+		DisBlock(block,asmcode);
+		startVA = block.End;
+	}
+
+	FILE* f = fopen("asm.txt","a+");
+	for each (std::string s in asmcode)
+	{
+		fprintf(f,"%s\n",s.c_str());
+	}
+	fclose(f);
 
 	return true;
 }
@@ -327,4 +382,31 @@ void x86Analysis::AddBlock( const CODEBLOCK& block )
 	}
 
 	m_vecBlocks.push_back(block);
+}
+
+void x86Analysis::DisBlock( const CODEBLOCK& block,std::vector<std::string>& asmcode )
+{
+	if (!IsAddrValid(block.Start))
+	{
+		assert(false);
+		return;
+	}
+
+	CPU_ADDR	curAddr;
+	curAddr.addr32.offset = block.Start;
+	char szBuffer[100]; // FIXME：可能缓冲区溢出
+	byte* pCodeStart = VA2CodeOffset(block.Start);
+
+	for (unsigned i = 0;
+		i < block.End - block.Start;)
+	{
+		x86dis_insn* insn = (x86dis_insn*)m_Decoder.decode(pCodeStart+i,m_uCodeSize-i,curAddr);
+
+		const char* pcsIns = m_Decoder.str(insn,DIS_STYLE_HEX_ASMSTYLE | DIS_STYLE_HEX_UPPERCASE | DIS_STYLE_HEX_NOZEROPAD);
+		//printf("%08X\t%s\n",curAddr.addr32.offset, pcsIns);
+		sprintf(szBuffer, "%08X  %s",curAddr.addr32.offset, pcsIns);
+		asmcode.push_back(std::string(szBuffer));
+		i += insn->size;
+		curAddr.addr32.offset += insn->size;
+	}
 }

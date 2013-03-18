@@ -36,7 +36,7 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnMemList)
 		COMMAND_ID_HANDLER(IDOK, OnListProcess)
 		COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
-		NOTIFY_HANDLER(IDC_LISTDISASM, NM_RCLICK, OnNMRclickListdisasm)
+		COMMAND_HANDLER(IDC_LISTDISASM, LBN_DBLCLK, OnLbnDblclkListdisasm)
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -44,10 +44,6 @@ public:
 		// center the dialog on the screen
 		CenterWindow();
 		m_ListDisasm = this->GetDlgItem(IDC_LISTDISASM);
-		m_ListDisasm.SetExtendedListViewStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
-		m_ListDisasm.InsertColumn(0,"µÿ÷∑",0,70);
-		m_ListDisasm.InsertColumn(1,"HEX",0,120);
-		m_ListDisasm.InsertColumn(2,"÷∏¡Ó",0,200);
 
 		// set icons
 		HICON hIcon = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON));
@@ -106,11 +102,10 @@ public:
 	bool DisasmAndShow(CMemListDlg::MEMRNGINFO& info);
 
 	int	m_nPid;
-	CListViewCtrl	m_ListDisasm;
+	CListBox	m_ListDisasm;
 	#include <x86dis.h>
 	x86dis m_x86Dasm;
-//	LRESULT OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT OnNMRclickListdisasm(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
+	LRESULT OnLbnDblclkListdisasm(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	CMemListDlg::MEMRNGINFO	info;
 	std::vector<byte> m_vecCode;
