@@ -35,6 +35,12 @@ bool CMainDlg::DisasmAndShow( CMemListDlg::MEMRNGINFO& info )
 	{
 		x86Analysis analysis(m_vecCode.data(),info.dwSize,m_StartAddr);
 		std::vector<std::string> asmcode;
+
+		for each (BYTE* addr in info.vecEntry)
+		{
+			analysis.AddEntry((uint32)addr);
+		}
+
 		analysis.Process(asmcode);
 
 		m_ListDisasm.ResetContent();

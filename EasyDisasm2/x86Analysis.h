@@ -3,6 +3,7 @@
 #include "x86dis.h"
 #include <list>
 #include <vector>
+#include <deque>
 
 class x86Analysis
 {
@@ -13,6 +14,8 @@ private:
 	byte* m_pCode;
 	uint32 m_uCodeSize;
 	uint32 m_uStartVA;
+
+	std::deque<x86dis_insn> cache_insn;
 
 	typedef struct tagCODEBLOCK
 	{
@@ -45,17 +48,15 @@ private:
 		BR_JCC
 	};
 	x86Analysis::BRANCHTYPE IsBranch(x86dis_insn* opcode);
+	bool IsJumpTable(x86dis_insn* insn);
 	CPU_ADDR branchAddr(x86dis_insn *opcode);
 	void AddBlock(const CODEBLOCK& block);
 	void DisBlock(const CODEBLOCK& block,std::vector<std::string>& asmcode);
 
 public:
-	x86Analysis(byte* pCode, unsigned uSize, uint32 uStartAddr)
-		:m_Decoder(X86_OPSIZE32,X86_ADDRSIZE32),
-		m_pCode(pCode),m_uCodeSize(uSize)
-		,m_uStartVA(uStartAddr){}
+	x86Analysis(byte* pCode, unsigned uSize, uint32 uStartAddr);
 
-	~x86Analysis(void){}
+	~x86Analysis(void);
 
 	bool IsAddrValid(uint32 addr)
 	{return (addr >= m_uStartVA && addr < (m_uStartVA+m_uCodeSize));}
@@ -79,7 +80,7 @@ public:
 		m_lstEntry.push_back(uEntry);
 		return true;
 	}
-	bool IsAddrDis(uint32 uAddr){}
+	bool IsAddrDis(uint32 uAddr){return false;}
 	bool Process(std::vector<std::string>& asmcode);
 };
 

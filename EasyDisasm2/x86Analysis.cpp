@@ -2,7 +2,22 @@
 #include "x86Analysis.h"
 #include "util.h"
 #include <algorithm>
+#include <string.h>
 
+extern HANDLE hProcess;
+
+x86Analysis::x86Analysis( byte* pCode, unsigned uSize, uint32 uStartAddr )
+	:m_Decoder(X86_OPSIZE32,X86_ADDRSIZE32),
+	m_pCode(pCode),m_uCodeSize(uSize),
+	m_uStartVA(uStartAddr),cache_insn(10)
+{
+
+}
+
+x86Analysis::~x86Analysis( void )
+{
+
+}
 
 void x86Analysis::GetBlock( uint32 uEntry )
 {
@@ -12,6 +27,7 @@ void x86Analysis::GetBlock( uint32 uEntry )
 	}
 
 	CPU_ADDR	curAddr;
+	curAddr.addr32.seg = 0;
 	curAddr.addr32.offset = uEntry;
 	uint32 uEnd = 0;
 
@@ -25,12 +41,19 @@ void x86Analysis::GetBlock( uint32 uEntry )
 
 	for (unsigned i=uEntry-m_uStartVA;i<m_uCodeSize;)
 	{
+		//assert(curAddr.addr32.offset != 0x00401029);
 		x86dis_insn* insn = (x86dis_insn*)m_Decoder.decode(m_pCode+i,m_uCodeSize-i,curAddr);
 
 		//const char* pcsIns = m_Decoder.str(insn,DIS_STYLE_HEX_ASMSTYLE | DIS_STYLE_HEX_UPPERCASE | DIS_STYLE_HEX_NOZEROPAD);
 		//printf("%08X\t%s\n",curAddr.addr32.offset, pcsIns);
 		i += insn->size;
 		curAddr.addr32.offset += insn->size;
+
+		if (cache_insn.size()>=10)
+		{
+			cache_insn.pop_back();
+		}
+		cache_insn.push_front(*insn);
 
 		uEnd = CodeOffset2VA(m_pCode + i);
 
@@ -40,20 +63,107 @@ void x86Analysis::GetBlock( uint32 uEntry )
 			return;
 		case BR_JMP:
 			{
-				CPU_ADDR addr = branchAddr(insn);
-				AddEntry(addr.addr32.offset);
-				return;
+				if (IsJumpTable(insn))
+				{
+					// 获取跳转表地址
+					BYTE* pIndexTabAddr = NULL;
+					BYTE* pAddressTabAddr = (BYTE*)insn->op[0].mem.disp;
+					int nIndexSize = 0;
+					int nIndexTabSize = 0;
+					for each (x86dis_insn insn in cache_insn)
+					{
+						if (insn.name == NULL)
+						{
+							continue;
+						}
+
+						if (strstr(insn.name,"mov")
+							&& insn.op[1].type == X86_OPTYPE_MEM
+							&& insn.op[0].type == X86_OPTYPE_REG
+							&& pIndexTabAddr == NULL)
+						{
+							pIndexTabAddr = (BYTE*)insn.op[1].mem.disp;
+							nIndexSize = insn.op[1].size;
+							continue;
+						}
+						if (strstr(insn.name,"cmp")
+							&& insn.op[1].type == X86_OPTYPE_IMM
+							&& nIndexTabSize == 0)
+						{
+							nIndexTabSize = insn.op[1].imm+1;
+							continue;
+						}
+
+// 						if (strstr(insn.name,""))
+// 						{
+// 							continue;
+// 						}
+					}
+
+					if (pIndexTabAddr == NULL
+						|| pAddressTabAddr == NULL
+						|| nIndexTabSize == 0
+						|| nIndexSize == 0)
+					{
+						// 构成跳转表的东西不够
+						return;
+					}
+
+					BYTE pIndexTabCpy[nIndexTabSize*nIndexSize];
+					SIZE_T nRead = 0;
+					BOOL ret = ReadProcessMemory(hProcess,pIndexTabAddr,pIndexTabCpy,nIndexTabSize*nIndexSize,&nRead);
+
+					int nIndex = 0;
+
+					for (int i=0;i<nIndexTabSize*nIndexSize;i+=nIndexSize)
+					{
+						switch (nIndexSize)
+						{
+						case 1:
+							{
+								nIndex = pIndexTabCpy[i];
+							}
+							break;
+						case 2:
+							{
+								nIndex = (WORD)pIndexTabCpy[i];
+							}
+							break;
+						case 4:
+							{
+								nIndex = (DWORD)pIndexTabCpy[i];
+							}
+							break;
+						}
+						uint32 address = 0;
+						ReadProcessMemory(hProcess,pAddressTabAddr+nIndex*4,&address,4,NULL);
+						AtlTrace("Index:%d,Address:0x%08x\n",nIndex,address);
+						AddEntry(address);
+					}
+// 					for ()
+// 					{
+// 					}
+					return;
+				}
+				else
+				{
+					CPU_ADDR addr = branchAddr(insn);
+					AddEntry(addr.addr32.offset);
+					return;
+				}
 			}
 		case BR_JCC:
 			{
 				CPU_ADDR addr = branchAddr(insn);
+				//AddEntry(uEnd);
+				GetBlock(uEnd);
 				AddEntry(addr.addr32.offset);
-				AddEntry(uEnd);
 				return;
 			}
 		case BR_CALL:
 			{
 				CPU_ADDR addr = branchAddr(insn);
+				AddEntry(uEnd);
 				AddEntry(addr.addr32.offset);
 			}
 			break;
@@ -139,6 +249,7 @@ CPU_ADDR x86Analysis::branchAddr(x86dis_insn *opcode)
 	case X86_OPTYPE_IMM:
 		{		
 			addr.addr32.offset = opcode->op[0].imm;
+			break;
 		}
 		// 	case X86_OPTYPE_FARPTR:
 		// 		break;
@@ -146,13 +257,17 @@ CPU_ADDR x86Analysis::branchAddr(x86dis_insn *opcode)
 		{
 			if (opcode->op[0].mem.hasdisp)
 			{
-				addr.addr32.offset = opcode->op[0].mem.disp;
+				//addr.addr32.offset = opcode->op[0].mem.disp;
+
+				ReadProcessMemory(hProcess,(LPVOID)opcode->op[0].mem.disp,&addr.addr32.offset,4,NULL);
 			}
-			else
-			{
-				break;
-			}
+			break;
 		}
+// 	case X86_OPTYPE_REG:
+// 		{
+// 			assert(false);
+// 		}
+// 		break;
 	default: break;
 	}
 	return addr;
@@ -410,3 +525,33 @@ void x86Analysis::DisBlock( const CODEBLOCK& block,std::vector<std::string>& asm
 		curAddr.addr32.offset += insn->size;
 	}
 }
+
+bool x86Analysis::IsJumpTable( x86dis_insn* insn )
+{
+	const char *opcode_str = insn->name;
+	if (opcode_str[0] == '~')
+	{
+		opcode_str++;
+	}
+	if (opcode_str[0] == '|')
+	{
+		opcode_str++;
+	}
+
+	if (opcode_str[0]!='j' || opcode_str[1]!='m')
+	{
+		return false;
+	}
+
+	const x86_insn_op& op0 = insn->op[0];
+	if (op0.type == X86_OPTYPE_MEM 
+		&& op0.mem.hasdisp 
+		&& op0.mem.index != X86_REG_NO 
+		&& op0.mem.scale == 4)
+	{
+		return true;
+	}
+	return false;
+
+}
+

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "MemListDlg.h"
 
+HANDLE hProcess = NULL;
 
 LRESULT CMemListDlg::OnNMRclickListmemory(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/)
 {
@@ -12,7 +13,7 @@ BOOL CMemListDlg::RefreshMemory()
 {
 	m_ListMemory.DeleteAllItems();
 
-	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,m_nPid);
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,m_nPid);
 	if (hProcess == INVALID_HANDLE_VALUE)
 	{
 		return FALSE;
@@ -235,7 +236,7 @@ BOOL CMemListDlg::RefreshMemory()
 		nItem++;
 		Address += info.RegionSize;
 	}
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 	RefreshMemory2();
 	return TRUE;
 
@@ -244,7 +245,7 @@ BOOL CMemListDlg::RefreshMemory()
 BOOL CMemListDlg::RefreshMemory2()
 {
 	m_MemInfoVec.clear();
-	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,m_nPid);
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,m_nPid);
 	if (hProcess == INVALID_HANDLE_VALUE)
 	{
 		return FALSE;
@@ -298,6 +299,9 @@ BOOL CMemListDlg::RefreshMemory2()
 		}
 		ModuleInfo.nNumSections = ntHeader.FileHeader.NumberOfSections;
 
+		//模块入口点
+		ModuleInfo.vecEntry.push_back((BYTE*)(ntHeader.OptionalHeader.ImageBase + ntHeader.OptionalHeader.AddressOfEntryPoint));
+
 		//从模块开始到区段表结束之前的大小
 		ModuleInfo.nPEHeaderSize = dosHeader.e_lfanew 
 			+ sizeof(IMAGE_NT_HEADERS) 
@@ -343,39 +347,51 @@ BOOL CMemListDlg::RefreshMemory2()
 		for (std::vector<MODULEINFO>::iterator it=vecModule.begin();
 			it!=vecModule.end();++it)
 		{
+			MODULEINFO& info = *it;
 			//查找该段内存属于哪个模块
-			if (pRgnStart>=it->modBaseAddr && pRgnStart<(it->modBaseAddr+it->modBaseSize))
+			if (pRgnStart<info.modBaseAddr || pRgnStart>=(info.modBaseAddr+info.modBaseSize))
 			{
-				MemInfo.strOwner = it->szModule;
-
-				AtlTrace("RgnDtart:%08X\n",pRgnStart);
-
-				if (pRgnStart == it->modBaseAddr)
-				{
-					MemInfo.strSectionName = "PE头";
-				}
-
-				//查找该段内存属于哪个区段
-				for (int i=0;i<it->nNumSections;++i)
-				{
-					SECTIONINFO& SecInfo = it->stSections[i];
-					byte*	pSecStart = SecInfo.pStartAddr;
-					byte*	pSecEnd = pSecStart + SecInfo.nSize;
-					AtlTrace("SecStart:%08X,SecEnd:%08X\n",pSecStart,pSecEnd);
-
-					if (pRgnStart == pSecStart)
-					{
-						MemInfo.strSectionName = SecInfo.Name;
-					}
-					else if (pSecStart>pRgnStart && pSecStart<pRgnEnd)
-					{
-						//MemInfo.strSectionName = "";
-						MemInfo.dwSize = pSecStart - pRgnStart;
-						break;
-					}
-				}
-				break;
+				continue;
 			}
+
+			MemInfo.strOwner = info.szModule;
+
+			AtlTrace("RgnDtart:%08X\n",pRgnStart);
+
+			if (pRgnStart == info.modBaseAddr)
+			{
+				MemInfo.strSectionName = "PE头";
+			}
+
+			//查找该段内存属于哪个区段
+			for (int i=0;i<info.nNumSections;++i)
+			{
+				SECTIONINFO& SecInfo = info.stSections[i];
+				byte*	pSecStart = SecInfo.pStartAddr;
+				byte*	pSecEnd = pSecStart + SecInfo.nSize;
+				AtlTrace("SecStart:%08X,SecEnd:%08X\n",pSecStart,pSecEnd);
+
+				if (pRgnStart == pSecStart)
+				{
+					MemInfo.strSectionName = SecInfo.Name;
+				}
+				else if (pSecStart>pRgnStart && pSecStart<pRgnEnd)
+				{
+					//MemInfo.strSectionName = "";
+					MemInfo.dwSize = pSecStart - pRgnStart;
+					break;
+				}
+			}
+
+			for each (BYTE* it in info.vecEntry)
+			{
+				if (it>=MemInfo.pStartAddr && it<(MemInfo.pStartAddr + MemInfo.dwSize))
+				{
+					MemInfo.vecEntry.push_back(it);
+				}
+			}
+
+			break;
 		}
 		m_MemInfoVec.push_back(MemInfo);
 		Address += MemInfo.dwSize;
@@ -430,7 +446,7 @@ BOOL CMemListDlg::RefreshMemory2()
 		++nItem;
 
 	}
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 	return TRUE;
 }
 

@@ -80,6 +80,8 @@ public:
 		DWORD	nPEHeaderSize;
 		int		nNumSections;
 		SECTIONINFO	stSections[96];
+
+		std::vector<BYTE*> vecEntry;
 	}MODULEINFO;
 
 	typedef	struct tagMEMRNGINFO 
@@ -88,12 +90,14 @@ public:
 		DWORD	dwSize;
 		std::string	strOwner;
 		std::string strSectionName;
-		BYTE*	pSectionStart;
+// 		BYTE*	pSectionStart;
 		DWORD	dwSectionSize;
 		DWORD	dwContains;
 		DWORD	dwType;
 		DWORD	dwAccess;
 		DWORD	dwInitial;
+
+		std::vector<BYTE*> vecEntry;
 		//std::string	strMapAs;
 	}MEMRNGINFO;
 	BOOL RefreshMemory();
